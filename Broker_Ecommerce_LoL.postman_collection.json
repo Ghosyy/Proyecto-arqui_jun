@@ -1,0 +1,272 @@
+{
+	"info": {
+		"_postman_id": "e4f8b9a1-872c-4f91-b3e1-d9a8c7b6e543",
+		"name": "Broker - LoL Merch Ecommerce (Proyecto Final)",
+		"description": "Colección completa para demostrar el ecosistema de 3 microservicios (Broker FastAPI, ms-productos NestJS y ms-pedidos NestJS) para la Universidad Mesoamericana.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0. Login Faker (Guardar Token)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.access_token) {",
+							"    pm.collectionVariables.set('token', jsonData.access_token);",
+							"    console.log('Token guardado automáticamente en la colección');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"usuario\": \"faker\",\n  \"password\": \"faker123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				},
+				"description": "Genera el JWT Bearer Token usando las credenciales del usuario (faker / faker123)."
+			},
+			"response": []
+		},
+		{
+			"name": "1. GET - Listar Todos los Productos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos"
+					]
+				},
+				"description": "Consulta el catálogo completo de productos en ms-productos a través del Broker."
+			},
+			"response": []
+		},
+		{
+			"name": "2. GET - Buscar Producto por Código",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos/RIOT-FIG-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos",
+						"RIOT-FIG-001"
+					]
+				},
+				"description": "Consulta la estatua de Faker Hall of Legends."
+			},
+			"response": []
+		},
+		{
+			"name": "3. GET - Filtrar Productos por Categoría",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos/categoria/Peluches",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos",
+						"categoria",
+						"Peluches"
+					]
+				},
+				"description": "Filtra únicamente los productos de categoría Peluches."
+			},
+			"response": []
+		},
+		{
+			"name": "4. POST - Crear Pedido Exitoso (Descuenta Stock)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"codigo\": \"PED-2026-001\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-PLU-001\",\n      \"cantidad\": 2\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pedidos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos"
+					]
+				},
+				"description": "Crea un pedido en ms-pedidos. Valida stock en ms-productos, descuenta 2 Poros y guarda el pedido con sus detalles."
+			},
+			"response": []
+		},
+		{
+			"name": "5. POST - Crear Pedido Fallido (Stock Insuficiente - Regla 2.b)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"codigo\": \"PED-FALLO-STOCK\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-FIG-001\",\n      \"cantidad\": 999\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pedidos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos"
+					]
+				},
+				"description": "Demuestra la regla de negocio: se intenta comprar 999 unidades cuando solo hay 3 en existencia. Lanza error 400 Bad Request."
+			},
+			"response": []
+		},
+		{
+			"name": "6. POST - Crear Pedido Fallido (Producto Inexistente - Regla 2.c)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"codigo\": \"PED-FALLO-NOEXISTE\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-INVENTADO-999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pedidos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos"
+					]
+				},
+				"description": "Demuestra el manejo de error 404 cuando se solicita un producto que no existe en el catálogo."
+			},
+			"response": []
+		},
+		{
+			"name": "7. GET - Listar Todos los Pedidos",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pedidos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos"
+					]
+				},
+				"description": "Obtiene la lista de pedidos con sus respectivos detalles y totales calculados."
+			},
+			"response": []
+		},
+		{
+			"name": "8. GET - Buscar Pedido por Código",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pedidos/PED-2026-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos",
+						"PED-2026-001"
+					]
+				},
+				"description": "Consulta la orden específica con sus detalles."
+			},
+			"response": []
+		},
+		{
+			"name": "9. DELETE - Cancelar Pedido (Soft Delete)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pedidos/PED-2026-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos",
+						"PED-2026-001"
+					]
+				},
+				"description": "Cancela lógicamente el pedido cambiando su estado a CANCELADO."
+			},
+			"response": []
+		}
+	]
+}

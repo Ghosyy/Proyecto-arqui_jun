@@ -1,0 +1,73 @@
+services:
+  # ==============================================================================
+  # 1. MICROSERVICIO DE PRODUCTOS (NestJS / TypeScript)
+  # ==============================================================================
+  - type: web
+    name: ms-productos-lol
+    env: node
+    plan: free
+    rootDir: ms-productos
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: DATABASE_URL
+        value: postgresql://postgres.uuambhhxkpyztcpbhcue:TGZgMU79jpvPVh8a@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+      - key: DB_SCHEMA
+        value: productos
+
+  # ==============================================================================
+  # 2. MICROSERVICIO DE PEDIDOS (NestJS / TypeScript)
+  # ==============================================================================
+  - type: web
+    name: ms-pedidos-lol
+    env: node
+    plan: free
+    rootDir: ms-pedidos
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: DATABASE_URL
+        value: postgresql://postgres.uuambhhxkpyztcpbhcue:TGZgMU79jpvPVh8a@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+      - key: DB_SCHEMA
+        value: pedidos
+      - key: URL_MS_PRODUCTOS
+        fromService:
+          type: web
+          name: ms-productos-lol
+          property: host
+
+  # ==============================================================================
+  # 3. BROKER / API GATEWAY (FastAPI / Python)
+  # ==============================================================================
+  - type: web
+    name: broker-lol
+    env: python
+    plan: free
+    rootDir: broker
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        value: clave_secreta_super_segura_lol_merch_2026
+      - key: ALGORITMO
+        value: HS256
+      - key: MINUTOS_EXPIRACION
+        value: 60
+      - key: DATABASE_URL
+        value: postgresql://postgres.uuambhhxkpyztcpbhcue:TGZgMU79jpvPVh8a@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+      - key: URL_MS_PRODUCTOS
+        fromService:
+          type: web
+          name: ms-productos-lol
+          property: host
+      - key: URL_MS_PEDIDOS
+        fromService:
+          type: web
+          name: ms-pedidos-lol
+          property: host

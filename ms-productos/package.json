@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nest build",
-    "start": "nest start",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/main.js",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main.js"
   },
@@ -23,6 +23,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
+    "typescript": "^6.0.2",
     "typeorm": "^1.1.1"
   },
   "devDependencies": {

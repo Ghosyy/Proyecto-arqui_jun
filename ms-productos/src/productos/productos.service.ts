@@ -1,3 +1,5 @@
+// logica de negocio para productos y catalogo
+// use la misma logica del servicio de helados pero adaptada a existencias
 import {
     BadRequestException,
     ConflictException,
@@ -20,6 +22,7 @@ export class ProductosService {
     ) {}
 
     async crear(dto: CrearProductoDto): Promise<Producto> {
+        // verificar que el codigo no este repetido
         const existente = await this.productosRepositorio.findOneBy({
             codigo: dto.codigo
         })
@@ -35,14 +38,17 @@ export class ProductosService {
     }
 
     listar(): Promise<Producto[]> {
+        // listar todos los productos
         return this.productosRepositorio.find()
     }
 
     listarPorCategoria(categoria: string): Promise<Producto[]> {
+        // buscar por categoria
         return this.productosRepositorio.findBy({ categoria })
     }
 
     async buscarPorCodigo(codigo: string): Promise<Producto> {
+        // buscar un producto por su codigo
         const producto = await this.productosRepositorio.findOneBy({
             codigo
         })
@@ -55,6 +61,7 @@ export class ProductosService {
     }
 
     async actualizar(codigo: string, dto: ActualizarProductoDto): Promise<Producto> {
+        // actualizar campos y cambiar estado si se queda en cero
         const producto = await this.buscarPorCodigo(codigo)
 
         Object.assign(producto, dto)
@@ -69,6 +76,7 @@ export class ProductosService {
     }
 
     async descontarStock(codigo: string, dto: DescontarStockDto): Promise<Producto> {
+        // descontar unidades verificando que haya suficiente existencia
         const producto = await this.buscarPorCodigo(codigo)
 
         if (producto.existencia < dto.cantidad) {
@@ -85,6 +93,7 @@ export class ProductosService {
     }
 
     async eliminar(codigo: string): Promise<Producto> {
+        // borrado logico pasandolo a descontinuado
         const producto = await this.buscarPorCodigo(codigo)
 
         producto.estado = 'DESCONTINUADO'

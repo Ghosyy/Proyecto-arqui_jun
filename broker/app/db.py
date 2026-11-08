@@ -1,3 +1,5 @@
+# consultas directas a la tabla usuarios en supabase
+# use la misma logica de conexion del proyecto de helados adaptada a postgresql
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
@@ -5,6 +7,7 @@ from app.config import config
 from app.passwords import crear_password
 
 def obtener_conexion():
+    # conecta por url de supabase o por parametros sueltos
     if config.database_url:
         return psycopg2.connect(
             config.database_url,
@@ -20,6 +23,7 @@ def obtener_conexion():
     )
 
 def crear_tablas_y_usuarios_iniciales() -> None:
+    # crea el schema broker y la tabla si no existen
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
         cursor.execute("CREATE SCHEMA IF NOT EXISTS broker;")
@@ -33,6 +37,7 @@ def crear_tablas_y_usuarios_iniciales() -> None:
             );
             """
         )
+        # mete los usuarios iniciales si la tabla esta vacia
         cursor.execute("SELECT COUNT(*) AS total FROM broker.usuarios;")
         fila = cursor.fetchone()
         if fila["total"] == 0:
@@ -50,6 +55,7 @@ def crear_tablas_y_usuarios_iniciales() -> None:
     conexion.close()
 
 def buscar_usuario(usuario: str):
+    # busca usuario para el login y para chequear baneo
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
         cursor.execute("SELECT * FROM broker.usuarios WHERE usuario = %s;", (usuario,))
@@ -58,6 +64,7 @@ def buscar_usuario(usuario: str):
     return fila
 
 def listar_usuarios():
+    # listar usuarios para el panel de admin
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
         cursor.execute("SELECT usuario, rol, estado FROM broker.usuarios ORDER BY usuario;")
@@ -66,6 +73,7 @@ def listar_usuarios():
     return filas
 
 def cambiar_estado(usuario: str, estado: str) -> None:
+    # para banear o desbanear usuarios
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
         cursor.execute(

@@ -1,3 +1,5 @@
+# proxy inverso transparente del broker
+# agarre la misma logica del intermediario y la adapte con httpx
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
@@ -15,14 +17,17 @@ async def proxy_generico(
     ruta: str,
     usuario: dict
 ) -> Response:
+    # armamos la url final de destino
     destino = url_base
     if ruta:
         destino += f"/{ruta}"
 
+    # inyectamos el usuario autenticado en la cabecera
     cabeceras = {"X-Usuario": usuario["usuario"]}
     if "content-type" in request.headers:
         cabeceras["Content-Type"] = request.headers["content-type"]
 
+    # reenviamos la peticion con timeout de 10 segundos
     try:
         async with httpx.AsyncClient(timeout = 10) as cliente:
             respuesta = await cliente.request(
@@ -50,6 +55,7 @@ async def proxy_generico(
     )
 
 def normalizar_url(base: str, path_esperado: str) -> str:
+    # limpia la url para no duplicar barras ni rutas
     url = base.strip().rstrip("/")
     if not url.startswith("http://") and not url.startswith("https://"):
         url = f"https://{url}"
@@ -57,7 +63,7 @@ def normalizar_url(base: str, path_esperado: str) -> str:
         url = f"{url}{path_esperado}"
     return url
 
-# --- Rutas hacia ms-productos ---
+# --- rutas hacia ms-productos ---
 @router.api_route("/productos", methods = METODOS, tags = ["ms-productos"])
 @router.api_route("/productos/{ruta:path}", methods = METODOS, tags = ["ms-productos"])
 async def reenviar_a_productos(
@@ -72,7 +78,7 @@ async def reenviar_a_productos(
         usuario
     )
 
-# --- Rutas hacia ms-pedidos ---
+# --- rutas hacia ms-pedidos ---
 @router.api_route("/pedidos", methods = METODOS, tags = ["ms-pedidos"])
 @router.api_route("/pedidos/{ruta:path}", methods = METODOS, tags = ["ms-pedidos"])
 async def reenviar_a_pedidos(

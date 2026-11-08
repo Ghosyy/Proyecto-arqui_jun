@@ -1,3 +1,4 @@
+# punto de entrada principal del broker fastapi
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,17 +9,21 @@ from app.routes import admin, auth, proxy
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI):
-    crear_tablas_y_usuarios_iniciales()  # se ejecuta una vez al arrancar
+    # inicializa las tablas en supabase al arrancar
+    crear_tablas_y_usuarios_iniciales()
     yield
 
+# inicializamos la app con el ciclo de vida
 app = FastAPI(title = "Broker LoL Merch Ecommerce", lifespan = ciclo_de_vida)
 
+# incluimos los routers de auth, admin y proxy
 app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(proxy.router)
 
 @app.get("/")
 def root():
+    # ruta base para comprobar que el broker este levantado
     return {
         "mensaje": "Broker LoL Merch Activo",
         "servicios": {

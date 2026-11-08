@@ -1,3 +1,5 @@
+# hasheo de contraseñas con sal
+# use la misma logica del proyecto de helados que hicimos
 import hashlib
 import hmac
 import os
@@ -5,7 +7,7 @@ import os
 ITERACION = 200_000
 
 def crear_password(password: str) -> str:
-    # Agregarle algo mas a la password
+    # sal aleatoria para mayor seguridad
     decoy = os.urandom(16)
     hash_bytes = hashlib.pbkdf2_hmac(
         "sha256",
@@ -13,18 +15,20 @@ def crear_password(password: str) -> str:
         decoy,
         ITERACION)
 
+    # guardamos la sal y el hash juntos separados por $
     password_completa = decoy.hex() + "$" + hash_bytes.hex()
     return password_completa
 
 def verificar_password(passwordGuardada: str, password: str) -> bool:
+    # agarramos la sal que se habia guardado
     decoy_hex, hash_hex = passwordGuardada.split("$")
 
-    # Se calcula el hash otra vez, con el mismo decoy que se guardó
+    # se recalcula el hash con la misma sal
     hash_nuevo = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode(),
         bytes.fromhex(decoy_hex),
         ITERACION)
 
-    # compare_digest compara sin revelar qué tan cerca estuvo la password
+    # comparamos de forma segura para evitar timing attacks
     return hmac.compare_digest(hash_nuevo.hex(), hash_hex)

@@ -25,11 +25,37 @@
 			"key": "token",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
 		{
-			"name": "0. Login Faker (Guardar Token)",
+			"name": "00. Seguridad - Intentar entrar sin Token (Rechazo 401)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos"
+					]
+				},
+				"description": "Demuestra que el Broker protege a los microservicios. Al no enviar token, rechaza con 401 Unauthorized."
+			},
+			"response": []
+		},
+		{
+			"name": "01. Auth - Login Faker (Guarda Token)",
 			"event": [
 				{
 					"listen": "test",
@@ -38,7 +64,7 @@
 							"var jsonData = pm.response.json();",
 							"if (jsonData.access_token) {",
 							"    pm.collectionVariables.set('token', jsonData.access_token);",
-							"    console.log('Token guardado automáticamente en la colección');",
+							"    console.log('Token de Faker guardado automáticamente en la colección');",
 							"}"
 						],
 						"type": "text/javascript"
@@ -75,7 +101,26 @@
 			"response": []
 		},
 		{
-			"name": "1. GET - Listar Todos los Productos",
+			"name": "02. Auth - Ver Mi Perfil (/auth/yo)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/auth/yo",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"yo"
+					]
+				},
+				"description": "El Broker lee el JWT y devuelve los datos del usuario autenticado."
+			},
+			"response": []
+		},
+		{
+			"name": "03. Productos - Listar Todo el Catálogo (GET)",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -93,46 +138,7 @@
 			"response": []
 		},
 		{
-			"name": "2. GET - Buscar Producto por Código",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/productos/RIOT-FIG-001",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"productos",
-						"RIOT-FIG-001"
-					]
-				},
-				"description": "Consulta la estatua de Faker Hall of Legends."
-			},
-			"response": []
-		},
-		{
-			"name": "3. GET - Filtrar Productos por Categoría",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/productos/categoria/Peluches",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"productos",
-						"categoria",
-						"Peluches"
-					]
-				},
-				"description": "Filtra únicamente los productos de categoría Peluches."
-			},
-			"response": []
-		},
-		{
-			"name": "4. POST - Crear Pedido Exitoso (Descuenta Stock)",
+			"name": "04. Productos - Crear Nuevo Producto (POST)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -143,7 +149,81 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"codigo\": \"PED-2026-001\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-PLU-001\",\n      \"cantidad\": 2\n    }\n  ]\n}"
+					"raw": "{\n  \"codigo\": \"RIOT-ESP-001\",\n  \"nombre\": \"Espada del Rey Arruinado (Réplica Colección)\",\n  \"descripcion\": \"Réplica de acero inoxidable a escala 1/1 con runas grabadas\",\n  \"precio\": 180.00,\n  \"existencia\": 10,\n  \"categoria\": \"Armas y Coleccionables\",\n  \"estado\": \"DISPONIBLE\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/productos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos"
+					]
+				},
+				"description": "Da de alta un nuevo producto en ms-productos a través del Broker."
+			},
+			"response": []
+		},
+		{
+			"name": "05. Productos - Consultar Producto Creado (GET)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos/RIOT-ESP-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos",
+						"RIOT-ESP-001"
+					]
+				},
+				"description": "Consulta el producto recién creado por su código único."
+			},
+			"response": []
+		},
+		{
+			"name": "06. Productos - Actualizar Precio o Datos (PATCH)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"precio\": 165.00,\n  \"descripcion\": \"Edición de lujo con certificado de autenticidad de Riot Games\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/productos/RIOT-ESP-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos",
+						"RIOT-ESP-001"
+					]
+				},
+				"description": "Actualiza parcialmente el producto en ms-productos."
+			},
+			"response": []
+		},
+		{
+			"name": "07. Pedidos - Fallo Stock Insuficiente (POST 400)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"codigo\": \"PED-FAIL-STOCK\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-ESP-001\",\n      \"cantidad\": 9999\n    }\n  ]\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/pedidos",
@@ -154,12 +234,12 @@
 						"pedidos"
 					]
 				},
-				"description": "Crea un pedido en ms-pedidos. Valida stock en ms-productos, descuenta 2 Poros y guarda el pedido con sus detalles."
+				"description": "Demuestra la regla de negocio: se intenta comprar 9999 unidades cuando solo hay 10. ms-pedidos llama a ms-productos y rechaza con 400 Bad Request."
 			},
 			"response": []
 		},
 		{
-			"name": "5. POST - Crear Pedido Fallido (Stock Insuficiente - Regla 2.b)",
+			"name": "08. Pedidos - Fallo Producto Inexistente (POST 404)",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -170,34 +250,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"codigo\": \"PED-FALLO-STOCK\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-FIG-001\",\n      \"cantidad\": 999\n    }\n  ]\n}"
-				},
-				"url": {
-					"raw": "{{baseUrl}}/pedidos",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"pedidos"
-					]
-				},
-				"description": "Demuestra la regla de negocio: se intenta comprar 999 unidades cuando solo hay 3 en existencia. Lanza error 400 Bad Request."
-			},
-			"response": []
-		},
-		{
-			"name": "6. POST - Crear Pedido Fallido (Producto Inexistente - Regla 2.c)",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"codigo\": \"PED-FALLO-NOEXISTE\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-INVENTADO-999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+					"raw": "{\n  \"codigo\": \"PED-FAIL-NOEXISTE\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-INVENTADO-999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
 				},
 				"url": {
 					"raw": "{{baseUrl}}/pedidos",
@@ -213,7 +266,53 @@
 			"response": []
 		},
 		{
-			"name": "7. GET - Listar Todos los Pedidos",
+			"name": "09. Pedidos - Crear Pedido Exitoso (POST 201)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"codigo\": \"PED-FLUJO-001\",\n  \"items\": [\n    {\n      \"productoCodigo\": \"RIOT-ESP-001\",\n      \"cantidad\": 3\n    }\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pedidos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos"
+					]
+				},
+				"description": "El Broker inyecta X-Usuario: faker. ms-pedidos consulta a ms-productos, descuenta 3 unidades y guarda el pedido con sus detalles en Supabase."
+			},
+			"response": []
+		},
+		{
+			"name": "10. Productos - Verificar Descuento de Stock (GET)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos/RIOT-ESP-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos",
+						"RIOT-ESP-001"
+					]
+				},
+				"description": "Verifica que el stock de RIOT-ESP-001 bajó de 10 a 7 tras la compra realizada."
+			},
+			"response": []
+		},
+		{
+			"name": "11. Pedidos - Listar Todos los Pedidos (GET)",
 			"request": {
 				"method": "GET",
 				"header": [],
@@ -226,23 +325,23 @@
 						"pedidos"
 					]
 				},
-				"description": "Obtiene la lista de pedidos con sus respectivos detalles y totales calculados."
+				"description": "Obtiene la lista de pedidos con sus respectivos detalles, totales y usuario asignado."
 			},
 			"response": []
 		},
 		{
-			"name": "8. GET - Buscar Pedido por Código",
+			"name": "12. Pedidos - Consultar Pedido por Código (GET)",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseUrl}}/pedidos/PED-2026-001",
+					"raw": "{{baseUrl}}/pedidos/PED-FLUJO-001",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"pedidos",
-						"PED-2026-001"
+						"PED-FLUJO-001"
 					]
 				},
 				"description": "Consulta la orden específica con sus detalles."
@@ -250,21 +349,194 @@
 			"response": []
 		},
 		{
-			"name": "9. DELETE - Cancelar Pedido (Soft Delete)",
+			"name": "13. Pedidos - Cancelar Pedido (PATCH Estado)",
 			"request": {
-				"method": "DELETE",
-				"header": [],
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"estado\": \"CANCELADO\"\n}"
+				},
 				"url": {
-					"raw": "{{baseUrl}}/pedidos/PED-2026-001",
+					"raw": "{{baseUrl}}/pedidos/PED-FLUJO-001/estado",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"pedidos",
-						"PED-2026-001"
+						"PED-FLUJO-001",
+						"estado"
 					]
 				},
-				"description": "Cancela lógicamente el pedido cambiando su estado a CANCELADO."
+				"description": "Actualiza el estado del pedido a CANCELADO."
+			},
+			"response": []
+		},
+		{
+			"name": "14. Pedidos - Eliminar Pedido (DELETE)",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pedidos/PED-FLUJO-001",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pedidos",
+						"PED-FLUJO-001"
+					]
+				},
+				"description": "Marca el pedido como cancelado / eliminado lógicamente."
+			},
+			"response": []
+		},
+		{
+			"name": "15. Admin - Login Admin (Guarda Token)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.access_token) {",
+							"    pm.collectionVariables.set('adminToken', jsonData.access_token);",
+							"    console.log('Token de Admin guardado automáticamente');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"usuario\": \"admin\",\n  \"password\": \"admin123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login con credenciales de administrador."
+			},
+			"response": []
+		},
+		{
+			"name": "16. Admin - Banear Usuario Faker (PATCH)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{adminToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"estado\": \"baneado\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/admin/usuarios/faker/estado",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"usuarios",
+						"faker",
+						"estado"
+					]
+				},
+				"description": "El administrador banea al usuario faker en la tabla broker.usuarios."
+			},
+			"response": []
+		},
+		{
+			"name": "17. Seguridad - Faker Intenta Peticion Estando Baneado (Rechazo 403)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/productos",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"productos"
+					]
+				},
+				"description": "Demuestra la verificación de baneo en vivo: el token de faker sigue siendo matemáticamente válido, pero el Broker consulta la base de datos en tiempo real y lo bloquea con 403 Forbidden."
+			},
+			"response": []
+		},
+		{
+			"name": "18. Admin - Desbanear Usuario Faker (PATCH)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{adminToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"estado\": \"activo\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/admin/usuarios/faker/estado",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"usuarios",
+						"faker",
+						"estado"
+					]
+				},
+				"description": "El administrador reactiva la cuenta de faker."
 			},
 			"response": []
 		}
